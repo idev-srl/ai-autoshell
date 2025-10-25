@@ -1,0 +1,31 @@
+# Build directory
+build/
+
+# CMake cache & files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Generated test binaries or scripts
+ai-autoshell
+ai-autoshell-script
+
+# Object files
+*.o
+*.obj
+*.o.d
+
+# Editor / OS files
+.DS_Store
+*.swp
+*.tmp
+
+# Logs
+*.log
+
+# Backup files
+*~
+
+# External deps build folders
+_deps/

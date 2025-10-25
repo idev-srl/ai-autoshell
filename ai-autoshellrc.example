@@ -1,0 +1,12 @@
+# AI-AutoShell configuration file example (~/.ai-autoshellrc)
+# Lines starting with # are comments.
+# Available keys:
+#   prompt_format = string with placeholders {user} {host} {cwd} {status}
+#   color = true|false|1|0|on|off
+# Default prompt_format: {user}@{host} {cwd}$ 
+# Example customized format with status:
+# prompt_format={user}@{host} [{cwd}] (exit={status})$ 
+# Disable color:
+# color=false
+prompt_format={user}@{host} [{cwd}]$ 
+color=true
