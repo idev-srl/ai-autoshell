@@ -2,67 +2,67 @@
 
 ## Overview
 
-AI-AutoShell è una shell minimale C++20 modulare composta da pipeline di fasi:
-Lexer -> Parser -> Expander -> Executor POSIX. Job control basilare.
+AI-AutoShell is a minimal modular C++20 shell composed of a pipeline of phases:
+Lexer -> Parser -> Expander -> POSIX Executor. Basic job control.
 
 ## Layering
 
-1. Lex (`include/ai-autoshell/lex`): trasforma input line in TokenStream.
-2. Parse (`include/ai-autoshell/parse`): produce AST (List -> AndOr -> Pipeline -> Command).
-3. Expand (`include/ai-autoshell/expand`): espansioni semplici (~, $VAR, ${VAR}).
+1. Lex (`include/ai-autoshell/lex`): transforms input line into TokenStream.
+2. Parse (`include/ai-autoshell/parse`): produces AST (List -> AndOr -> Pipeline -> Command).
+3. Expand (`include/ai-autoshell/expand`): simple expansions (~, $VAR, ${VAR}).
 4. Exec (`include/ai-autoshell/exec`): path resolution, redirections, built-ins, job control, executor.
 
 ## Main Loop
 
 `src/main.cpp`:
 
-- legge linea
+- read line
 - Lexer::run -> tokens
 - parse_tokens -> AST
 - ExecutorPOSIX.run(AST)
-- aggiorna $? (m_ctx.last_status)
+- update $? (m_ctx.last_status)
 
 ## AST
 
-ListNode: segmenti separati da ';'
-AndOrNode: sequenza di Pipeline con operatori logici ("&&","||")
-PipelineNode: N CommandNode con pipe
+ListNode: segments separated by ';'
+AndOrNode: sequence of Pipeline with logical operators ("&&","||")
+PipelineNode: N CommandNode with pipes
 CommandNode: argv, redirs, assigns, background flag
 
 ## Redirections
 
-Supporto: > >> < 2> 2>&1
-Implementazione: `apply_redirections` apre file e dup2 su fd target.
+Supported: > >> < 2> 2>&1
+Implementation: `apply_redirections` opens files and dup2 onto target fds.
 
 ## Built-ins
 
 cd, pwd, echo, export, unset, exit, jobs, fg, bg.
-Redirezioni applicate duplicando fds (salvataggio/restauro).
+Redirections applied by duplicating fds (save/restore).
 
 ## Job Control
 
-`JobTable` traccia jobs: id, pgid, running, background.
-Background singolo comando o pipeline: fork non bloccante, setpgid, aggiunta job.
-`jobs`: reaping e listing.
-`fg`: attesa gruppo di processo.
-`bg`: stub (solo reap).
+`JobTable` tracks jobs: id, pgid, running, background.
+Single command or pipeline background: non-blocking fork, setpgid, add job.
+`jobs`: reaping and listing.
+`fg`: wait on process group.
+`bg`: stub (just reap) for now.
 
 ## Error Handling
 
-- Comando non trovato -> status 127.
-- Fallimento fork/pipe/open -> perror + status 1.
+- Command not found -> status 127.
+- fork/pipe/open failure -> perror + status 1.
 
-## Estensioni Future
+## Future Extensions
 
-- Globbing wildcard
-- Subshell e grouping
+- Wildcard globbing
+- Subshell & grouping
 - Command substitution
-- Sicurezza (conferme per comandi sensibili)
-- Integrazione AI suggerimenti
+- Security (confirm sensitive commands)
+- AI suggestions integration
 
-## Dipendenze
+## Dependencies
 
-Solo libc++/libstdc++, GoogleTest per test.
+Only libc++/libstdc++, GoogleTest for tests.
 
 ## Build
 
@@ -70,14 +70,14 @@ CMake >=3.16, target `ai-autoshell` + test executables.
 
 ## Process Groups
 
-Pipeline: tutti i figli nello stesso pgid per job control.
+Pipeline: all children in same pgid for job control.
 
-## Segnali
+## Signals
 
-SIGINT reset a default nei child; ignorato per background singolo.
+SIGINT reset to default in children; ignored for single background.
 
-## Limitazioni Attuali
+## Current Limitations
 
-- Job control parziale (bg non riattiva stop)
-- Nessun parsing avanzato di quote nested
-- Nessun supporto a variabili speciali oltre $?.
+- Partial job control (bg doesn't reactivate stop)
+- No advanced parsing of nested quotes
+- No support for special variables beyond $?

@@ -1,178 +1,178 @@
 # AI-AutoShell Usage Guide
 
-Questa guida riassume ciò che puoi fare oggi con AI-AutoShell (MVP evoluto).
+This guide summarizes what you can do today with AI-AutoShell (evolved MVP).
 
-## Avvio
+## Startup
 
-Lancia `ai-autoshell` e vedrai un banner con informazioni di sistema e funzionalità.
+Launch `ai-autoshell` and you'll see a banner with system info and capabilities.
 
 Prompt: `user@host [cwd]$`
 
-## Comandi built-in
+## Built-in Commands
 
-- `cd [dir]` cambia directory (supporta `cd -`).
-- `pwd` stampa la directory corrente.
-- `echo ...` stampa gli argomenti (espansione variabili e tilde prima del globbing).
-- `export VAR=VAL [ALTRE=...]` imposta variabili ambiente.
-- `unset VAR [...]` rimuove variabili.
-- `jobs` mostra job in background / stopped / conclusi.
-- `fg <id>` porta un job in foreground (riprende se stoppato).
-- `bg <id>` riprende un job stoppato in background.
-- `exit` chiude la shell.
+- `cd [dir]` changes directory (supports `cd -`).
+- `pwd` prints current directory.
+- `echo ...` prints arguments (variable & tilde expansion before globbing).
+- `export VAR=VAL [OTHER=...]` sets environment variables.
+- `unset VAR [...]` removes variables.
+- `jobs` shows background / stopped / finished jobs.
+- `fg <id>` brings a job to foreground (resumes if stopped).
+- `bg <id>` resumes a stopped job in background.
+- `exit` closes the shell.
 
-## Esecuzione esterna
+## External Execution
 
-Usa `argv` normali: es. `ls -l`, `grep pattern file.txt`.
-La shell risolve l'eseguibile scorrendo `$PATH`.
+Use standard `argv`: e.g. `ls -l`, `grep pattern file.txt`.
+The shell resolves the executable scanning `$PATH`.
 
-## Pipeline & Logica
+## Pipelines & Logic
 
 - Pipeline: `cmd1 | cmd2 | cmd3`
 - AND / OR: `cmd1 && cmd2 || cmd3`
-- Sequenza: `cmd1; cmd2; cmd3`
+- Sequence: `cmd1; cmd2; cmd3`
 
 ## Background & Job Control
 
-- Aggiungi `&` alla fine di un comando o pipeline: `sleep 5 &`
-- Job stoppato (Ctrl-Z non ancora implementato) è riconosciuto se il processo riceve `SIGTSTP`.
-- `jobs`, `fg`, `bg` gestiscono stato (running, stopped, done).
+- Append `&` at end of a command or pipeline: `sleep 5 &`
+- Stopped job (Ctrl-Z) recognized if process receives `SIGTSTP`.
+- `jobs`, `fg`, `bg` manage states (running, stopped, done).
 
-## Redirezioni
+## Redirections
 
-- Output: `>` sovrascrive, `>>` accoda
+- Output: `>` overwrite, `>>` append
 - Input: `<`
 - Error: `2>`
-- Unisci stdout/stderr: `2>&1`
+- Merge stdout/stderr: `2>&1`
 
-Esempio: `grep foo file.txt > out.log 2>&1`
+Example: `grep foo file.txt > out.log 2>&1`
 
-## Espansioni
+## Expansions
 
-- Tilde: `~` e `~/subdir`
-- Variabili: `$VAR`, `${VAR}`
-- Globbing: `*`, `?`, `[abc]` (solo nel cwd, niente percorsi annidati)
-  - Nessun match ⇒ parola invariata
+- Tilde: `~` and `~/subdir`
+- Variables: `$VAR`, `${VAR}`
+- Globbing: `*`, `?`, `[abc]` (cwd only, no recursive path patterns)
+  - No match ⇒ word unchanged
 
-Esempi:
+Examples:
 
-- `echo ~$USER` → espande HOME e USER
-- `echo *.txt` → elenca file .txt in cwd
-- `echo data_??.log` → file con due caratteri tra underscore e .log
+- `echo ~$USER` expands HOME and USER
+- `echo *.txt` lists .txt files in cwd
+- `echo data_??.log` files with two chars between underscore and .log
 
-## Stato ultimo comando
+## Last Command Status
 
-Variabile speciale `$?` (anche esportata come env `?`) contiene exit status dell'ultimo comando.
+Special variable `$?` (also exported as env `?`) holds exit status of last command.
 
-## Funzionalità avanzate appena aggiunte
+## Recently Added Advanced Features
 
-- Subshell grouping: racchiudi comandi tra parentesi `(...)` anche in pipeline: `(echo hi)|cat`.
-- Command substitution: `echo X$(echo hi)Y` produce `XhiY`. (Implementazione MVP: una sostituzione semplice non annidata per token.)
-- Ctrl-Z (SIGTSTP) inoltrato al gruppo foreground: sospende correttamente il job che poi appare in `jobs` come stoppato e può essere ripreso con `fg` o `bg`.
-- History con frecce: Usa ↑ e ↓ per navigare i comandi precedenti.
-- Tab completion evoluta:
-  - Built-in, file e directory nel cwd (directory con suffisso '/').
-  - Dopo `cd` vengono mostrati solo le directory (supporta prefissi relativi `./`, `../`, assoluti `/` e HOME `~/`).
-  - I nomi nascosti (che iniziano con '.') compaiono solo se il prefisso iniziava con '.'.
-  - Comandi dal `$PATH` cache-izzati (invalidazione quando cambia `PATH`).
-  - Primo Tab: completa prefisso comune o singolo match (aggiunge '/' se directory, spazio se file/command).
-  - Secondo Tab consecutivo (senza modifiche): mostra lista candidati formattata a colonne.
-  - Caching directory per ridurre accessi FS (non ancora invalidazione su modifiche; aggiornamento manuale cambiando directory).
+- Subshell grouping: wrap commands in `(...)` even in pipelines: `(echo hi)|cat`.
+- Command substitution: `echo X$(echo hi)Y` → `XhiY`. (MVP: single non-nested substitution per token.)
+- Ctrl-Z (SIGTSTP) forwarded to foreground group: suspends job which then appears in `jobs` as stopped and can be resumed with `fg` or `bg`.
+- History with arrows: Use ↑ and ↓ to navigate previous commands.
+- Enhanced tab completion:
+  - Built-ins, files and directories in cwd (directories suffixed '/').
+  - After `cd` show only directories (supports relative `./`, `../`, absolute `/` and HOME `~/`).
+  - Hidden names (starting with '.') appear only if prefix started with '.'.
+  - Commands from `$PATH` cached (invalidation when `PATH` changes).
+  - First Tab: complete common prefix or single match (adds '/' if directory, space if file/command).
+  - Second consecutive Tab (without edits): shows candidate list formatted in columns.
+  - Directory caching reduces FS access (no change detection yet; update by changing directory).
 
-## Limitazioni ancora presenti
+## Existing Limitations
 
-- Globbing non attraversa directory (`src/*.cpp` non supportato).
-- Mancano here-doc (`<<`), process substitution, alias, history persistente.
-- Command substitution non supporta annidamenti multipli o più occorrenze nello stesso token.
-- Subshell non isola variabili d'ambiente (condivisione diretta del contesto MVP).
-- Sicurezza LLM e pianificazione non ancora implementate.
+- Globbing does not traverse directories (`src/*.cpp` unsupported).
+- Missing here-doc (`<<`), process substitution, alias, persistent history.
+- Command substitution lacks multi-nesting or multiple occurrences in same token.
+- Subshell does not isolate environment variables (shared MVP context).
+- LLM safety layer and planner not implemented yet.
 
-## Debug rapido
+## Quick Debug
 
-Se qualcosa sembra bloccato:
+If something seems stuck:
 
-- Usa `jobs` per vedere processi attivi.
-- Invia `Ctrl-C` per interrompere il primo piano.
+- Use `jobs` to view active processes.
+- Send `Ctrl-C` to interrupt foreground job.
 
-## Esempi completi
+## Complete Examples
 
 ```sh
-# Pipeline + redirezione
+# Pipeline + redirection
 cat file.txt | grep ERROR | wc -l > error_count.txt
 
 # And/Or
-make && echo "Build ok" || echo "Build fallita"
+make && echo "Build ok" || echo "Build failed"
 
 # Background
 sleep 10 &
 jobs
 
-# Foreground di un job
+# Foreground a job
 fg 1
 
 # Globbing
 echo __glob_*.txt
 
-# Variabili
+# Variables
 export NAME=Luigi
-echo "Ciao $NAME"
+echo "Hello $NAME"
 ```
 
-## Prossimi passi (roadmap sintetica)
+## Next Steps (condensed roadmap)
 
 - Command substitution, grouping, here-doc.
-- Miglior job control (Ctrl-Z, stop/continue automatico).
-- Layer LLM con piani JSON.
-- Configurazione utente e plugin.
+- Better job control (Ctrl-Z, automatic stop/continue).
+- LLM layer with JSON plans.
+- User configuration and plugins.
 
-Buona esplorazione!
+Happy exploring!
 
-## Configurazione (rc file)
+## Configuration (rc file)
 
-Puoi creare `~/.ai-autoshellrc` per personalizzare il prompt.
+Create `~/.ai-autoshellrc` to customize prompt.
 
-Chiavi supportate:
+Supported keys:
 
-- `prompt_format` template con placeholder `{user} {host} {cwd} {status}`
-- `color` abilita/disabilita colori ANSI (`true/false`)
+- `prompt_format` template with placeholders `{user} {host} {cwd} {status}`
+- `color` enable/disable ANSI colors (`true/false`)
 
-Esempio:
+Example:
 
 ```ini
 prompt_format={user}@{host} [{cwd}] (st={status})$
 color=true
 ```
 
-Vedi `ai-autoshellrc.example` e `docs/config.md` per dettagli.
+See `ai-autoshellrc.example` and `docs/config.md` for details.
 
-## Script .ash
+## .ash Scripts
 
-Puoi eseguire script non interattivi con il runner:
+You can run non-interactive scripts via runner:
 
-```
+```sh
 ./build/ai-autoshell-script examples/hello.ash
 ```
 
-Caratteristiche:
+Features:
 
-- Esegue ogni linea (ignora vuote e commenti `#`).
-- Usa lo stesso motore della shell interattiva (lexer, parser, executor, job control).
-- Interruzione con Ctrl-C ferma l'esecuzione.
+- Executes each line (skips empty and `#` comments).
+- Uses same engine as interactive shell (lexer, parser, executor, job control).
+- Interrupt with Ctrl-C stops execution.
 
-Limitazioni attuali (script runner):
+Current limitations (script runner):
 
-- Nessun `set -e`, nessuna gestione di funzioni o blocchi `{ }`.
-- Variabili si propagano solo nel processo padre del runner (come export normali).
-- Non supporta here-doc; command substitution disponibile ma con i limiti sopra.
+- No `set -e`, no functions or `{ }` blocks.
+- Variables propagate only in runner parent process (like normal exports).
+- No here-doc; command substitution available with above limits.
 
-Esempio base (`examples/hello.ash`):
+Basic example (`examples/hello.ash`):
 
-```
-echo "Inizio script"
+```sh
+echo "Script start"
 export NAME=Luigi
-echo "Ciao $NAME"
-ls | grep cpp || echo "Nessun cpp"
+echo "Hello $NAME"
+ls | grep cpp || echo "No cpp"
 sleep 1 &
 jobs
 fg 1
-echo "Fine script (status precedente=$?)"
+echo "End script (previous status=$?)"
 ```

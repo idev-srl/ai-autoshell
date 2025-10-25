@@ -1,47 +1,47 @@
 # AI-AutoShell Roadmap
 
-## Fasi Completate
+## Completed Phases
 
-1. Lexer separato (tokenizzazione operatori, redir, assegnazioni basiche)
+1. Separate lexer (tokenizing operators, redir, basic assignments)
 2. Parser + AST (list, and/or, pipeline, command, redirs, background flag)
 3. Expander (~, $VAR, ${VAR})
-4. Executor POSIX (pipeline, redirections, built-ins, basic job control, background)
-5. Test unitari base (lexer, parser, expander, executor) 10/10 verdi
+4. POSIX executor (pipeline, redirections, built-ins, basic job control, background)
+5. Basic unit tests (lexer, parser, expander, executor) 10/10 green
 
-## In Corso / Prossimo
+## In Progress / Next
 
-- Documentazione tecnica (architecture, grammar, roadmap) [IN CORSO]
-- Estendere test per job control e errori redirection
-- Cleanup finale (gestione $? più estesa, variabili speciali)
+- Technical documentation (architecture, grammar, roadmap) [IN PROGRESS]
+- Extend tests for job control and redirection errors
+- Final cleanup (broader $? handling, special variables)
 
 ## Future Enhancements
 
-- Job control avanzato (stop/continue, SIGTSTP, fg/bg completi)
-- Globbing pattern (wildcards \* ? [])
-- Command substitution `$( )` e backticks
+- Advanced job control (stop/continue, SIGTSTP, fg/bg complete)
+- Globbing patterns (wildcards \* ? [])
+- Command substitution `$( )` and backticks
 - Here-document (<<)
-- Subshell e grouping `( ... )`
-- Store storico comandi e integrazione suggerimenti AI
-- Layer sicurezza: analisi comando "pericoloso" + richiesta conferma
-- Modalità offline/online per agent AI
+- Subshell and grouping `( ... )`
+- Store command history and AI suggestion integration
+- Security layer: "dangerous" command analysis + confirmation
+- Offline/online modes for AI agent
 
-## Qualità
+## Quality
 
-- Aggiungere test stress su pipeline lunghe (>10 comandi)
-- Sanitizers e eventualmente fuzzing con libFuzzer
+- Add stress tests on long pipelines (>10 commands)
+- Sanitizers and eventual fuzzing with libFuzzer
 
-## Distribuzione
+## Distribution
 
-- Packaging binario (macOS/Linux) via CPack / GitHub Releases
-- Eventuale porting Windows (fase sperimentale)
+- Binary packaging (macOS/Linux) via CPack / GitHub Releases
+- Possible Windows port (experimental phase)
 
-## Versionamento
+## Versioning
 
 MVP target: v0.1.0
-Obiettivo post-MVP con funzionalità avanzate: v0.2.x
-Stabilità e plugin AI: v0.3.x
+Post-MVP advanced features: v0.2.x
+Stability and AI plugins: v0.3.x
 
-## Contributi
+## Contributions
 
-- Guidelines contributo da aggiungere (CONTRIBUTING.md)
-- Codice sotto licenza MIT
+- Contribution guidelines to add (CONTRIBUTING.md)
+- Code under MIT license

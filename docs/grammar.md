@@ -1,8 +1,8 @@
-# AI-AutoShell Grammar (Semplificata)
+# AI-AutoShell Grammar (Simplified)
 
-Questa grammatica descrive l'MVP senza subshell né grouping.
+This grammar describes the MVP without subshell or grouping.
 
-Notation: `*` zero o più, `+` uno o più, `?` opzionale.
+Notation: `*` zero or more, `+` one or more, `?` optional.
 
 ```
 line        := list EOF
@@ -23,22 +23,22 @@ background  := '&'
 
 Token Types:
 
-- WORD: sequenza di caratteri non separator (spazi o operatori), con quote e escape già risolte dal lexer.
-- ASSIGN: pattern NAME=VALUE riconosciuto dal lexer (prefisso NAME in [A-Za-z\_][A-Za-z0-9_]\*).
+- WORD: sequence of non-separator characters (spaces or operators), with quotes and escapes already resolved by the lexer.
+- ASSIGN: pattern NAME=VALUE recognized by the lexer (NAME prefix in [A-Za-z\_][A-Za-z0-9_]\*).
 - Operators: `| && || ; & > >> < 2> 2>&1`
 
-Precedenza:
+Precedence:
 
-1. Redirections legate al comando.
-2. Pipeline (associa a sinistra).
-3. AND/OR, valutazione short-circuit.
-4. List separato da ';'.
+1. Redirections bind to the command.
+2. Pipeline (left associative).
+3. AND/OR, short-circuit evaluation.
+4. List separated by ';'.
 
 Background:
 
-- Solo flag a livello di command (può apparire sull'ultimo comando di una pipeline per mettere l'intera pipeline in background).
+- Only a flag at command level (may appear on the last command of a pipeline to put the entire pipeline in background).
 
-Limitazioni:
+Limitations:
 
-- Nessun supporto ancora per parentesi, subshell, `$( )`, backticks, here-doc.
-- Parsing tollerante: errori semplici (redir senza target) interrompono quella parte senza abort globale.
+- No support yet for parentheses, subshell, `$( )`, backticks, here-doc.
+- Lenient parsing: simple errors (redir without target) interrupt that part without global abort.

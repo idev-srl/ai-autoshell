@@ -1,58 +1,58 @@
-# Configurazione AI-AutoShell
+# AI-AutoShell Configuration
 
-File di configurazione opzionale: `~/.ai-autoshellrc`
+Optional configuration file: `~/.ai-autoshellrc`
 
-Formato:
+Format:
 
-- Ogni riga `chiave=valore`
-- `#` inizia un commento
-- Spazi non vengono trim-mati automaticamente (evita spazi attorno all'=')
+- Each line `key=value`
+- `#` starts a comment
+- Spaces are not auto-trimmed (avoid spaces around `=`)
 
-Chiavi supportate:
+Supported keys:
 
-| Chiave        | Descrizione                             | Default                 |
-| ------------- | --------------------------------------- | ----------------------- |
-| prompt_format | Template del prompt con placeholder     | `{user}@{host} {cwd}$ ` |
-| color         | Abilita sequenze ANSI colore nel prompt | `true`                  |
+| Key           | Description                               | Default                 |
+| ------------- | ----------------------------------------- | ----------------------- |
+| prompt_format | Prompt template with placeholders         | `{user}@{host} {cwd}$ ` |
+| color         | Enable ANSI color sequences in the prompt | `true`                  |
 
-Placeholder disponibili in `prompt_format`:
+Available placeholders in `prompt_format`:
 
-- `{user}` nome utente
+- `{user}` username
 - `{host}` hostname
-- `{cwd}` ultima componente della directory corrente
-- `{status}` exit status ultimo comando (`$?`)
+- `{cwd}` last component of current directory
+- `{status}` exit status of last command (`$?`)
 
-Esempi:
+Examples:
 
 ```ini
-# Prompt compatto con status e cwd tra parentesi
+# Compact prompt with status and cwd in brackets
 prompt_format={user}@{host} [{cwd}] (st={status})$
 color=true
 ```
 
 ```ini
-# Prompt senza colori
+# Prompt without colors
 color=false
 prompt_format={cwd}$
 ```
 
-Colori:
+Colors:
 
-- Colori attuali: user=verde, host=blu, cwd=giallo, status=rosso.
-- Disabilitando `color` vengono rimossi i codici ANSI.
+- Current colors: user=green, host=blue, cwd=yellow, status=red.
+- Disabling `color` removes ANSI codes.
 
-Note:
+Notes:
 
-- Se il file non esiste vengono usati i default.
-- Campi sconosciuti vengono ignorati.
-- In futuro: alias, history, livelli di sicurezza LLM, plugin.
+- If the file does not exist defaults are used.
+- Unknown keys are ignored.
+- Future: alias, history, LLM security levels, plugins.
 
-Errori comuni:
+Common errors:
 
-- Usare virgolette: non serve (`prompt_format="{user}"` → includerà le virgolette nel prompt).
-- Inserire spazi dopo `=`: `prompt_format= {user}` produce spazio iniziale.
+- Using quotes: not needed (`prompt_format="{user}"` → quotes appear in prompt).
+- Adding spaces after `=`: `prompt_format= {user}` produces leading space.
 
-Per testare rapidamente:
+Quick test:
 
 ```sh
 cp ai-autoshellrc.example ~/.ai-autoshellrc
@@ -60,7 +60,7 @@ $EDITOR ~/.ai-autoshellrc
 ./build/ai-autoshell
 ```
 
-Futuri parametri (roadmap):
+Future parameters (roadmap):
 
 - `history_size=1000`
 - `danger_confirm=on`

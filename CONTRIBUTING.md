@@ -1,73 +1,73 @@
-# Contributi a AI-AutoShell
+# Contributing to AI-AutoShell
 
-Grazie per l'interesse! Questo progetto mira a costruire una shell autonoma sicura e modulare.
+Thanks for your interest! This project aims to build a safe, modular autonomous shell.
 
-## Requisiti
+## Requirements
 
 - C++20
 - CMake >= 3.16
-- macOS o Linux (Windows in futuro)
-- Ninja (opzionale per build più rapide)
+- macOS or Linux (Windows in the future)
+- Ninja (optional for faster builds)
 
-## Setup rapido
+## Quick Setup
 
-```
+```sh
 mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Debug ..
 cmake --build . -j
 ctest --output-on-failure
 ```
 
-## Linee guida codice
+## Code Guidelines
 
-- Attiva sempre: `-Wall -Wextra -Wpedantic`
-- Evita `system()`, `popen()`, shell wrapping (`sh -c`). Solo `fork` + `execvp`.
-- Non introdurre dipendenze pesanti; prima valuta standard library.
-- Mantieni funzioni piccole e a singola responsabilità.
-- Usa header sotto `include/ai-autoshell/...` per API pubbliche.
-- Commenta invarianti non ovvie e edge cases.
+- Always enable: `-Wall -Wextra -Wpedantic`.
+- Avoid `system()`, `popen()`, shell wrapping (`sh -c`). Only use `fork` + `execvp`.
+- Do not introduce heavy dependencies; prefer the standard library first.
+- Keep functions small and single-responsibility.
+- Public API headers belong under `include/ai-autoshell/...`.
+- Comment non-obvious invariants and edge cases.
 
-## Struttura modulo
+## Module Flow
 
 1. Lexer → Tokens
 2. Parser → AST
-3. Expander → argv/file path normalizzati
-4. Executor → processi/FD/jobs
+3. Expander → normalized argv / file paths
+4. Executor → processes / FDs / jobs
 
-## Test
+## Tests
 
-- Ogni nuovo modulo richiede almeno 1 test happy path + 1 edge case.
-- Usa GoogleTest; i file vanno in `tests/` con nome `test_<nome>.cpp`.
-- Evita dipendenza dai test sull'ambiente dell'utente (HOME, PATH) — se necessario mocka.
+- Each new module requires at least 1 happy path test + 1 edge case.
+- Use GoogleTest; files go in `tests/` named `test_<name>.cpp`.
+- Avoid relying on the user environment (HOME, PATH); mock if necessary.
 
-## Commit
+## Commits
 
-- Messaggi in inglese.
-- Prefissi suggeriti: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `build:`.
+- Messages in English.
+- Suggested prefixes: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `build:`.
 
-## Pull Request
+## Pull Requests
 
-- Descrivi: problema, soluzione, rischi, test aggiunti.
-- Mantieni PR piccole (< ~600 LOC diff quando possibile).
+- Describe: problem, solution, risks, added tests.
+- Keep PRs small (< ~600 LOC diff when possible).
 
-## Job Control (stato)
+## Job Control (status)
 
-- Adesso: solo running/completed.
-- Futuro: stopped (SIGTSTP), continue (SIGCONT), gestione foreground group.
+- Current: only running/completed.
+- Future: stopped (SIGTSTP), continue (SIGCONT), foreground group management.
 
-## Sicurezza
+## Security
 
-- Nessuna esecuzione diretta di testo fornito da LLM.
-- Validare input per path traversal dove rilevante.
+- No direct execution of text supplied by an LLM.
+- Validate input for path traversal when relevant.
 
-## Roadmap extra
+## Extra Roadmap
 
 - Globbing, command substitution, here-docs.
-- Integrazione LLM pianificatore.
-- Porting Windows.
+- LLM planner integration.
+- Windows port.
 
-## Domande
+## Questions
 
-Apri una Issue oppure discuti nel PR.
+Open an Issue or discuss in the PR.
 
-Buon hacking!
+Happy hacking!
