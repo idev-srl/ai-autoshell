@@ -85,9 +85,10 @@ int ExecutorPOSIX::run_pipeline(const PipelineNode& pipeline) {
                 }
                 return run_command(*ptr);
             } else if constexpr (std::is_same_v<T, std::unique_ptr<SubshellNode>>) {
-                // Subshell singola
+                // Subshell singola inline (no extra fork) se foreground
                 if (ptr->background) return run_subshell(*ptr, true);
-                return run_subshell(*ptr, false);
+                if (ptr->list) return run_list(*ptr->list);
+                return 0;
             }
             return 0;
         }, pipeline.elements[0]);
@@ -122,11 +123,13 @@ int ExecutorPOSIX::run_pipeline(const PipelineNode& pipeline) {
                 if constexpr (std::is_same_v<T, std::unique_ptr<CommandNode>>) {
                     return run_command(*ptr);
                 } else if constexpr (std::is_same_v<T, std::unique_ptr<SubshellNode>>) {
-                    // Esecuzione subshell inline: fork extra per isolare? Qui già siamo in child
-                    return run_subshell(*ptr, false);
+                    // Esecuzione subshell inline: niente fork aggiuntivo, esegue lista e ritorna status
+                    if (ptr->list) return run_list(*ptr->list);
+                    return 0;
                 }
                 return 0;
             }, pipeline.elements[i]);
+            std::fflush(stdout);
             _exit(rc);
         }
         pids.push_back(pid);
@@ -167,30 +170,18 @@ int ExecutorPOSIX::run_pipeline(const PipelineNode& pipeline) {
 }
 
 int ExecutorPOSIX::run_subshell(const SubshellNode& node, bool background) {
-    // Subshell: nuovo processo che esegue la lista internamente
+    // Only used for background subshell now
     pid_t pid = fork();
     if (pid < 0) { perror("fork"); return 1; }
     if (pid == 0) {
-        // Child subshell
-        std::signal(SIGINT, background ? SIG_IGN : SIG_DFL);
+        std::signal(SIGINT, SIG_IGN);
         setpgid(0,0);
-        int st = 0;
-        if (node.list) {
-            st = run_list(*node.list); // usa stesso executor; attenzione a m_ctx (condiviso). Per isolamento variabili servirebbe copia.
-        }
+        int st = node.list ? run_list(*node.list) : 0;
         _exit(st);
     }
     setpgid(pid,pid);
-    if (background || node.background) {
-        m_ctx.jobs.add(pid, "subshell", true);
-        std::cout << "[" << pid << "] subshell running in background" << '\n';
-        return 0;
-    }
-    g_foreground_pgid = pid;
-    int st=0; while (waitpid(pid,&st,0)<0 && errno==EINTR) {}
-    g_foreground_pgid.reset();
-    if (WIFEXITED(st)) return WEXITSTATUS(st);
-    if (WIFSIGNALED(st)) return 128+WTERMSIG(st);
+    m_ctx.jobs.add(pid, "subshell", true);
+    std::cout << "[" << pid << "] subshell running in background" << '\n';
     return 0;
 }
 

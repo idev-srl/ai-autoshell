@@ -2,7 +2,7 @@
  * AI-AutoShell Expansion Implementation
  * Copyright (c) 2025 iDev srl - Luigi De Astis <l.deastis@idev-srl.com>
  * MIT License.
- * Description: Implements ~, $VAR, ${VAR} expansions (no command substitution).
+ * Description: Implements ~, $VAR, ${VAR} expansions (plus simple globbing & command substitution).
  */
 #include <cstdlib>
 #include <string>
@@ -10,6 +10,7 @@
 #include <cctype>
 #include <algorithm>
 #include <regex>
+#include <sstream>
 #include <filesystem>
 #include <system_error>
 #include <ai-autoshell/expand/expand.hpp>
@@ -106,17 +107,17 @@ static std::vector<std::string> run_glob(const std::string& pattern) {
 }
 
 static std::string command_substitute(const std::string& body) {
-    // Esegue body come comando shell semplice: usa /bin/sh -c per MVP
+    // Minimal implementation via /bin/sh -c; keeps isolation and flush before exit.
     int pipefd[2];
     if (pipe(pipefd) != 0) return "";
     pid_t pid = fork();
     if (pid < 0) { close(pipefd[0]); close(pipefd[1]); return ""; }
     if (pid == 0) {
-        // child
         close(pipefd[0]);
         dup2(pipefd[1], STDOUT_FILENO);
-        dup2(pipefd[1], STDERR_FILENO); // semplificazione
+        dup2(pipefd[1], STDERR_FILENO);
         execl("/bin/sh", "sh", "-c", body.c_str(), (char*)nullptr);
+        std::fflush(stdout);
         _exit(127);
     }
     close(pipefd[1]);
@@ -124,13 +125,12 @@ static std::string command_substitute(const std::string& body) {
     while ((n = read(pipefd[0], buf, sizeof(buf))) > 0) output.append(buf, buf+n);
     close(pipefd[0]);
     int st=0; while (waitpid(pid,&st,0)<0 && errno==EINTR) {}
-    // Trim trailing newlines
     while (!output.empty() && (output.back()=='\n' || output.back()=='\r')) output.pop_back();
     return output;
 }
 
 std::string expand_word(const std::string& in) {
-    // Gestione semplice di una singola sostituzione $(...) non annidata
+    // Simple handling of a single non-nested $(...) substitution
     std::string tmp = expand_tilde(in);
     tmp = expand_env_vars(tmp);
     size_t pos = tmp.find("$(");
@@ -149,6 +149,32 @@ std::vector<std::string> expand_words(const std::vector<std::string>& words) {
     std::vector<std::string> out; out.reserve(words.size());
     for (auto &w : words) {
         std::string base = expand_word(w);
+    // Simple brace expansion {1..5} and {a,b,c}
+        auto brace_pos = base.find('{');
+        if (brace_pos != std::string::npos) {
+            size_t end = base.find('}', brace_pos+1);
+            if (end != std::string::npos) {
+                std::string inside = base.substr(brace_pos+1, end-(brace_pos+1));
+                std::vector<std::string> variants;
+                size_t dots = inside.find("..");
+                if (dots != std::string::npos) {
+                    std::string a = inside.substr(0,dots); std::string b = inside.substr(dots+2);
+                    bool numA = !a.empty() && std::all_of(a.begin(),a.end(),[](unsigned char c){ return std::isdigit(c) || c=='-'; });
+                    bool numB = !b.empty() && std::all_of(b.begin(),b.end(),[](unsigned char c){ return std::isdigit(c) || c=='-'; });
+                    if (numA && numB) {
+                        long ia = std::stol(a), ib = std::stol(b); if (ia<=ib) { for(long v=ia; v<=ib; ++v) variants.push_back(std::to_string(v)); } else { for(long v=ia; v>=ib; --v) variants.push_back(std::to_string(v)); }
+                    }
+                } else if(inside.find(',')!=std::string::npos){
+                    std::stringstream ss(inside); std::string item; while(std::getline(ss,item,',')){ if(!item.empty()) variants.push_back(item); }
+                }
+                if(!variants.empty()) {
+                    std::string prefix = base.substr(0, brace_pos);
+                    std::string suffix = base.substr(end+1);
+                    for(auto &v : variants){ out.push_back(prefix + v + suffix); }
+                    continue; // skip default handling
+                }
+            }
+        }
         if (has_glob_chars(base)) {
             auto globbed = run_glob(base);
             out.insert(out.end(), globbed.begin(), globbed.end());

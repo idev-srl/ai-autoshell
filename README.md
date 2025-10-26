@@ -105,6 +105,72 @@ Tab completion supports:
 - Context-sensitive `cd` (only directories, supports `~/`, `./`, `../`, absolute paths)
   Hidden entries only shown when you start the prefix with `.`. Double-Tab lists matches in columns with colors.
 
+## AI Planner & LLM Configuration
+
+The shell includes an experimental AI planner built-in `ai` (enable via rc file).
+
+Usage:
+
+```sh
+ai suggest list files in current directory
+aio auto clean build folder
+./build/ai-autoshell --ai-debug   # avvia con output JSON completo dei piani
+```
+
+Modes:
+
+- suggest: show JSON plan, do not execute
+- auto: generate plan then execute sequentially (with confirmation if dangerous)
+
+Config keys in `~/.ai-autoshellrc`:
+
+| Key               | Meaning                                            | Example                                                 |
+| ----------------- | -------------------------------------------------- | ------------------------------------------------------- |
+| ai_enabled        | Enable AI features                                 | ai_enabled=true                                         |
+| planner_mode      | Default mode (suggest/auto)                        | planner_mode=suggest                                    |
+| llm_provider      | Provider tag (openai/anthropic/local/none)         | llm_provider=openai                                     |
+| llm_model         | Model id                                           | llm_model=gpt-4o-mini                                   |
+| llm_endpoint      | Override HTTPS endpoint                            | llm_endpoint=https://api.openai.com/v1/chat/completions |
+| llm_api_key_env   | Env var containing API key                         | llm_api_key_env=OPENAI_API_KEY                          |
+| llm_enabled       | Enable LLM enrichment of first step (default true) | llm_enabled=true                                        |
+| llm_stub_file     | Path to local stub response file                   | llm_stub_file=/path/plan_hint.txt                       |
+| llm_api_key       | Direct API key (NOT recommended; prefer env var)   | llm_api_key=sk-XXXX                                     |
+| (flag) --ai-debug | Show full JSON plan output (otherwise summary)     | ./build/ai-autoshell --ai-debug                         |
+
+Current implementation is rule-based. If `llm_enabled=true` a lightweight enrichment is performed:
+
+Priority order for enrichment source:
+
+1. Stub file (`llm_stub_file`): entire file content appended as note.
+2. Simulated remote (if provider!=none and env key present OR direct key) -> placeholder string.
+3. Echo fallback (just returns prompt text).
+
+Only the first plan step description is extended with: `(LLM note: ...)`.
+
+Default non-debug output (`ai suggest ...`) mostra solo il numero di step e i comandi. Usa `--ai-debug` per il JSON completo.
+
+Security note: usa `llm_api_key_env` invece di `llm_api_key` per non salvare segreti in chiaro su disco.
+
+JSON plan schema:
+
+```json
+{
+  "request": "list files",
+  "dangerous": false,
+  "risk_summary": "",
+  "steps": [
+    {
+      "id": "s1",
+      "description": "List files in current directory",
+      "command": "ls -la",
+      "confirm": false
+    }
+  ]
+}
+```
+
+Dangerous detection (confirmation required): commands containing `rm `, `sudo`, `chmod 777`.
+
 ## 7. Roadmap
 
 Near-term:

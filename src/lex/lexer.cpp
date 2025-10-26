@@ -63,6 +63,17 @@ Token Lexer::lex_word() {
             if (c=='\'') { in_single=true; get(); continue; }
             if (c=='"') { in_double=true; get(); continue; }
             if (c=='\\') { get(); if(!eof()) out.push_back(get()); continue; }
+                // Handle command substitution $( ... ) as single token (no nesting)
+                if (c=='$' && m_pos+1 < m_input.size() && m_input[m_pos+1]=='(') {
+                    out.push_back('$'); out.push_back('('); m_pos+=2; // consume '$('
+                    int depth=1; while (!eof() && depth>0) {
+                        char d = peek();
+                        if (d=='(') { depth++; out.push_back(d); m_pos++; continue; }
+                        if (d==')') { depth--; out.push_back(d); m_pos++; if (depth==0) break; continue; }
+                        out.push_back(d); m_pos++;
+                    }
+                    continue; // continue accumulating remainder of word
+                }
             out.push_back(get());
         } else if (in_single) {
             get(); if (c=='\'') { in_single=false; continue; } out.push_back(c);

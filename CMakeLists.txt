@@ -45,6 +45,12 @@ if(BUILD_POSIX AND AI_AUTOSHELL_POSIX)
   src/exec/job.cpp
   src/exec/executor_posix.cpp
   src/line/line_editor.cpp
+  src/ai/planner.cpp
+  src/ai/llm.cpp
+  src/ai/llm_openai.cpp
+  src/ai/llm_ollama.cpp
+    src/ai/json_plan.cpp
+  src/exec/executor_win.cpp
   )
   target_include_directories(ai-autoshell PRIVATE src)
   target_include_directories(ai-autoshell PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -61,6 +67,10 @@ if(BUILD_POSIX AND AI_AUTOSHELL_POSIX)
     src/exec/job.cpp
     src/exec/executor_posix.cpp
   src/line/line_editor.cpp
+  src/ai/planner.cpp
+  src/ai/llm.cpp
+  src/ai/llm_openai.cpp
+  src/ai/llm_ollama.cpp
   )
   target_include_directories(ai-autoshell-script PRIVATE src ${CMAKE_CURRENT_SOURCE_DIR}/include)
   target_compile_definitions(ai-autoshell-script PRIVATE AI_AUTOSHELL_POSIX=1)
@@ -227,10 +237,25 @@ add_executable(test_command_subst
   src/exec/job.cpp
   src/exec/executor_posix.cpp
   src/line/line_editor.cpp
+  src/ai/planner.cpp
+  src/ai/llm.cpp
+  src/ai/llm_openai.cpp
+  src/ai/llm_ollama.cpp
 )
 target_link_libraries(test_command_subst PRIVATE GTest::gtest_main)
 target_include_directories(test_command_subst PRIVATE src ${CMAKE_CURRENT_SOURCE_DIR}/include)
 gtest_discover_tests(test_command_subst)
+
+add_executable(test_planner
+  tests/test_planner.cpp
+  src/ai/planner.cpp
+  src/ai/llm.cpp
+  src/ai/llm_openai.cpp
+  src/ai/llm_ollama.cpp
+)
+target_link_libraries(test_planner PRIVATE GTest::gtest_main)
+target_include_directories(test_planner PRIVATE src ${CMAKE_CURRENT_SOURCE_DIR}/include)
+gtest_discover_tests(test_planner)
 
 # ----------------------------------------------------------------------------
 # Windows target (placeholder)
@@ -238,10 +263,41 @@ gtest_discover_tests(test_command_subst)
 if(WIN32 AND BUILD_WINDOWS)
   add_executable(ai-autoshell-win
     # TODO: add a Windows-specific entry point (e.g., src/main_win.cpp)
+  src/main.cpp
+  src/lex/lexer.cpp
+  src/parse/parser.cpp
+  src/expand/expand.cpp
+  src/exec/path.cpp
+  src/exec/redir.cpp
+  src/exec/builtins.cpp
+  src/exec/job.cpp
+  src/exec/executor_win.cpp
+  src/line/line_editor.cpp
+  src/ai/planner.cpp
+  src/ai/llm.cpp
+  src/ai/llm_openai.cpp
+  src/ai/llm_ollama.cpp
+  src/ai/json_plan.cpp
   )
   target_compile_definitions(ai-autoshell-win PRIVATE AI_AUTOSHELL_WINDOWS=1 _WIN32_WINNT=0x0A00)
   target_link_libraries(ai-autoshell-win PRIVATE ws2_32)
   install(TARGETS ai-autoshell-win RUNTIME DESTINATION bin)
+endif()
+
+# libcurl (per client OpenAI)
+find_package(CURL)
+if(CURL_FOUND)
+  target_link_libraries(ai-autoshell PRIVATE CURL::libcurl)
+  target_link_libraries(ai-autoshell-script PRIVATE CURL::libcurl)
+  if(TARGET test_planner)
+    target_link_libraries(test_planner PRIVATE CURL::libcurl)
+  endif()
+  if(TARGET test_command_subst)
+    target_link_libraries(test_command_subst PRIVATE CURL::libcurl)
+  endif()
+  message(STATUS "libcurl found: enabling OpenAI client")
+else()
+  message(WARNING "libcurl NOT found: OpenAI client will fallback to stub")
 endif()
 
 # ----------------------------------------------------------------------------

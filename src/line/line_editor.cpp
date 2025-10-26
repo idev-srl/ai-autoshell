@@ -1,5 +1,4 @@
 #include <map>
-extern std::map<std::string, std::string> g_completion_colors;
 /*
  * Line editor implementation (minimal)
  */
@@ -14,6 +13,8 @@ extern std::map<std::string, std::string> g_completion_colors;
 #include <algorithm>
 
 namespace autoshell {
+
+std::map<std::string,std::string> g_completion_colors; // defined here, referenced by main
 
 static struct termios g_orig;
 
@@ -97,10 +98,9 @@ std::string LineEditor::read_line(const std::string& prompt,
                     if (last_was_tab) {
                         write("\n");
                         int col=0;
-                        extern std::map<std::string, std::string> g_completion_colors;
                         for (auto &m : matches) {
-                            auto it = g_completion_colors.find(m);
-                            if (it != g_completion_colors.end() && !it->second.empty()) {
+                            auto it = autoshell::g_completion_colors.find(m);
+                            if (it != autoshell::g_completion_colors.end() && !it->second.empty()) {
                                 write(it->second); // codice colore ANSI
                                 write(m);
                                 write("\033[0m"); // reset colore
