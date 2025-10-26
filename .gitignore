@@ -29,3 +29,9 @@ ai-autoshell-script
 
 # External deps build folders
 _deps/
+PROGRESSO.md
+
+# Ensure public headers are tracked
+!include/
+!include/ai-autoshell/
+!include/ai-autoshell/**
