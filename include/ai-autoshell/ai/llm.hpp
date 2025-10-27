@@ -3,6 +3,7 @@
 #include <vector>
 #include <optional>
 #include <functional>
+#include <memory>
 
 namespace autoshell::ai {
 

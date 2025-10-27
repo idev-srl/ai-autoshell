@@ -9,8 +9,6 @@
 
 namespace autoshell::ai {
 
-static std::string trim(const std::string& s){ size_t a=0; while(a<s.size() && std::isspace((unsigned char)s[a])) ++a; size_t b=s.size(); while(b>a && std::isspace((unsigned char)s[b-1])) --b; return s.substr(a,b-a); }
-
 std::optional<LLMCompletion> StubLLMClient::complete(const std::string& prompt) {
     // 1. If stub_file configured and readable: return its contents (or first line matching a prefix rule)
     if (!m_cfg.stub_file.empty()) {

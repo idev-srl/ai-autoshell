@@ -19,7 +19,10 @@ ParsedPlan parse_plan_json(const std::string& input) {
     for(size_t i=arr; i<json.size(); ++i){ char c=json[i]; if(!in_str){ if(c=='[') bracket_depth++; else if(c==']'){ bracket_depth--; if(bracket_depth==0){ arr_end=i; break; } } else if(c=='"'){ in_str=true; } }
         else { if(escape){ escape=false; } else if(c=='\\'){ escape=true; } else if(c=='"'){ in_str=false; } }
     }
-    if(arr_end==std::string::npos) return out; std::string arr_content = json.substr(arr+1, arr_end-arr-1);
+    if (arr_end == std::string::npos) {
+        return out;
+    }
+    std::string arr_content = json.substr(arr + 1, arr_end - arr - 1);
     size_t pos=0; int idx=1; while(pos < arr_content.size()){
         // trova inizio object
         size_t obj_start=std::string::npos; bool in_s=false; bool esc=false; for(size_t i=pos;i<arr_content.size();++i){ char c=arr_content[i]; if(!in_s){ if(c=='"') in_s=true; else if(c=='{'){ obj_start=i; break; } else if(c==']') { pos=arr_content.size(); break; } }

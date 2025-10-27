@@ -109,7 +109,6 @@ std::optional<LLMCompletion> OpenAILLMClient::complete(const std::string& prompt
                 size_t message_pos = response.find("\"message\"", first_obj);
                 if(message_pos != std::string::npos) {
                     size_t msg_obj_start = response.find('{', message_pos);
-                    size_t msg_obj_end = std::string::npos;
                     // grezzo: cerchiamo la chiusura '}' più vicina prima di '"role" dell'assistente successivo
                     if(msg_obj_start != std::string::npos) {
                         msg_obj_end = response.find('}', msg_obj_start+1);
@@ -146,12 +145,25 @@ std::optional<LLMCompletion> OpenAILLMClient::complete(const std::string& prompt
     // Grep-like extraction for usage fields
     auto extract_int = [&](const std::string& key)->int{
         size_t pos = response.find(key);
-        if(pos==std::string::npos) return -1;
+        if (pos == std::string::npos) {
+            return -1;
+        }
         pos = response.find(':', pos);
-        if(pos==std::string::npos) return -1;
-        ++pos; while(pos<response.size() && (response[pos]==' '||response[pos]=='\n')) ++pos;
-        size_t end=pos; while(end<response.size() && isdigit((unsigned char)response[end])) ++end;
-        if(end==pos) return -1; return std::stoi(response.substr(pos,end-pos));
+        if (pos == std::string::npos) {
+            return -1;
+        }
+        ++pos;
+        while (pos < response.size() && (response[pos] == ' ' || response[pos] == '\n')) {
+            ++pos;
+        }
+        size_t end = pos;
+        while (end < response.size() && isdigit((unsigned char)response[end])) {
+            ++end;
+        }
+        if (end == pos) {
+            return -1;
+        }
+        return std::stoi(response.substr(pos, end - pos));
     };
     prompt_tokens = extract_int("\"prompt_tokens\"");
     completion_tokens = extract_int("\"completion_tokens\"");

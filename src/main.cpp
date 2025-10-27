@@ -65,22 +65,35 @@ static ShellConfig g_cfg;
 static std::string getenv_or(const char* k, const std::string& def="") { const char* v = std::getenv(k); return v?std::string(v):def; }
 static std::string apply_color(const std::string& s, const char* code){ if(!g_cfg.color) return s; return std::string("\x1b[")+code+"m"+s+"\x1b[0m"; }
 static void load_config(){
-    std::string home=getenv_or("HOME"); if(home.empty()) return; std::ifstream in(home+"/.ai-autoshellrc"); if(!in) return; std::string line; while(std::getline(in,line)){
-        if(line.empty()||line[0]=='#') continue; auto eq=line.find('='); if(eq==std::string::npos) continue; auto key=line.substr(0,eq); auto val=line.substr(eq+1);
-        if(key=="prompt_format") g_cfg.prompt_format=val;
-        else if(key=="color") g_cfg.color=(val=="1"||val=="true"||val=="on");
-        else if(key=="ai_enabled") g_cfg.ai_enabled=(val=="1"||val=="true"||val=="on");
-        else if(key=="planner_mode") g_cfg.planner_mode=val;
-        else if(key=="llm_provider") g_cfg.llm_provider=val;
-        else if(key=="llm_model") g_cfg.llm_model=val;
-        else if(key=="llm_endpoint") g_cfg.llm_endpoint=val;
-    else if(key=="llm_api_key_env") g_cfg.llm_api_key_env=val;
-    else if(key=="llm_api_key") g_cfg.llm_api_key=val;
-    else if(key=="llm_enabled") g_cfg.llm_enabled=(val=="1"||val=="true"||val=="on");
-    else if(key=="llm_stub_file") g_cfg.llm_stub_file=val;
-    else if(key=="llm_spinner") g_cfg.llm_spinner=(val=="1"||val=="true"||val=="on");
-    else if(key=="llm_prompt_price_per_1k") { try { g_cfg.llm_prompt_price_per_1k = std::stod(val); } catch(...) {} }
-    else if(key=="llm_completion_price_per_1k") { try { g_cfg.llm_completion_price_per_1k = std::stod(val); } catch(...) {} }
+    std::string home = getenv_or("HOME");
+    if (home.empty()) return;
+    std::ifstream in(home+"/.ai-autoshellrc");
+    if (!in) return;
+    std::string line;
+    while (std::getline(in, line)) {
+        if (line.empty() || line[0] == '#') {
+            continue;
+        }
+        auto eq = line.find('=');
+        if (eq == std::string::npos) {
+            continue;
+        }
+        auto key = line.substr(0, eq);
+        auto val = line.substr(eq + 1);
+        if (key == "prompt_format") g_cfg.prompt_format = val;
+        else if (key == "color") g_cfg.color = (val == "1" || val == "true" || val == "on");
+        else if (key == "ai_enabled") g_cfg.ai_enabled = (val == "1" || val == "true" || val == "on");
+        else if (key == "planner_mode") g_cfg.planner_mode = val;
+        else if (key == "llm_provider") g_cfg.llm_provider = val;
+        else if (key == "llm_model") g_cfg.llm_model = val;
+        else if (key == "llm_endpoint") g_cfg.llm_endpoint = val;
+        else if (key == "llm_api_key_env") g_cfg.llm_api_key_env = val;
+        else if (key == "llm_api_key") g_cfg.llm_api_key = val;
+        else if (key == "llm_enabled") g_cfg.llm_enabled = (val == "1" || val == "true" || val == "on");
+        else if (key == "llm_stub_file") g_cfg.llm_stub_file = val;
+        else if (key == "llm_spinner") g_cfg.llm_spinner = (val == "1" || val == "true" || val == "on");
+        else if (key == "llm_prompt_price_per_1k") { try { g_cfg.llm_prompt_price_per_1k = std::stod(val); } catch(...) {} }
+        else if (key == "llm_completion_price_per_1k") { try { g_cfg.llm_completion_price_per_1k = std::stod(val); } catch(...) {} }
     }
 }
 static void sigint_handler(int){ g_interrupted=1; }

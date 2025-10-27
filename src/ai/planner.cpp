@@ -2,6 +2,7 @@
 #include <ai-autoshell/ai/planner.hpp>
 #include <sstream>
 #include <algorithm>
+#include <cstring>
 
 namespace autoshell::ai {
 
