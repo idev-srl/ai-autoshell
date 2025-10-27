@@ -107,11 +107,15 @@ std::optional<LLMCompletion> OpenAILLMClient::complete(const std::string& prompt
             if(first_obj != std::string::npos) {
                 // all'interno del primo oggetto cerchiamo "message" poi "content"
                 size_t message_pos = response.find("\"message\"", first_obj);
-                if(message_pos != std::string::npos) {
+                if (message_pos != std::string::npos) {
                     size_t msg_obj_start = response.find('{', message_pos);
-                    // grezzo: cerchiamo la chiusura '}' più vicina prima di '"role" dell'assistente successivo
-                    if(msg_obj_start != std::string::npos) {
-                        msg_obj_end = response.find('}', msg_obj_start+1);
+                    if (msg_obj_start == std::string::npos) {
+                        // struttura inattesa: interrompe parsing canonico
+                    } else {
+                        size_t msg_obj_end = response.find('}', msg_obj_start + 1);
+                        if (msg_obj_end == std::string::npos) {
+                            // non trovata chiusura: abort canonical path
+                        }
                     }
                     size_t content_key = response.find("\"content\"", msg_obj_start);
                     if(content_key != std::string::npos) {
