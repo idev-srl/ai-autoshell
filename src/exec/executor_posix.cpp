@@ -85,10 +85,8 @@ int ExecutorPOSIX::run_pipeline(const PipelineNode& pipeline) {
                 }
                 return run_command(*ptr);
             } else if constexpr (std::is_same_v<T, std::unique_ptr<SubshellNode>>) {
-                // Subshell singola inline (no extra fork) se foreground
-                if (ptr->background) return run_subshell(*ptr, true);
-                if (ptr->list) return run_list(*ptr->list);
-                return 0;
+                // Esegui sempre la subshell in un processo separato per coerenza POSIX
+                return run_subshell(*ptr, ptr->background);
             }
             return 0;
         }, pipeline.elements[0]);
@@ -170,19 +168,24 @@ int ExecutorPOSIX::run_pipeline(const PipelineNode& pipeline) {
 }
 
 int ExecutorPOSIX::run_subshell(const SubshellNode& node, bool background) {
-    // Only used for background subshell now
     pid_t pid = fork();
     if (pid < 0) { perror("fork"); return 1; }
     if (pid == 0) {
-        std::signal(SIGINT, SIG_IGN);
+        if (!background) std::signal(SIGINT, SIG_DFL); else std::signal(SIGINT, SIG_IGN);
         setpgid(0,0);
         int st = node.list ? run_list(*node.list) : 0;
         _exit(st);
     }
     setpgid(pid,pid);
-    m_ctx.jobs.add(pid, "subshell", true);
-    std::cout << "[" << pid << "] subshell running in background" << '\n';
-    return 0;
+    if (background) {
+        m_ctx.jobs.add(pid, "subshell", true);
+        std::cout << "[" << pid << "] subshell running in background" << '\n';
+        return 0;
+    }
+    // foreground: wait
+    int st=0; while (waitpid(pid,&st,0)<0 && errno==EINTR) {}
+    int status=0; if (WIFEXITED(st)) status=WEXITSTATUS(st); else if (WIFSIGNALED(st)) status=128+WTERMSIG(st);
+    return status;
 }
 
 std::vector<RedirSpec> ExecutorPOSIX::build_redirs(const CommandNode& cmd) {

@@ -284,9 +284,42 @@ if(WIN32 AND BUILD_WINDOWS)
   install(TARGETS ai-autoshell-win RUNTIME DESTINATION bin)
 endif()
 
-# libcurl (per client OpenAI)
-find_package(CURL)
-if(CURL_FOUND)
+# ----------------------------------------------------------------------------
+# libcurl (per client OpenAI) - fallback vendorizzato se non presente
+# ----------------------------------------------------------------------------
+option(FORCE_BUNDLED_CURL "Scarica e costruisci una copia locale di libcurl" OFF)
+
+if(NOT FORCE_BUNDLED_CURL)
+  find_package(CURL QUIET)
+endif()
+
+if(NOT CURL_FOUND)
+  message(STATUS "libcurl non trovato (o forzato bundle). Verrà scaricato sorgente.")
+  include(FetchContent)
+  # Versione curl (tag formattato con underscore come da repository)
+  set(AI_AUTOSHELL_CURL_TAG curl-8_7_1)
+  FetchContent_Declare(
+    bundled_curl
+    URL https://github.com/curl/curl/archive/refs/tags/${AI_AUTOSHELL_CURL_TAG}.tar.gz
+    # SHA256 ufficiale rilevata dal download (aggiornare se si cambia tag)
+    URL_HASH SHA256=0e46c856f517602c347bb5fe5b73174f8ee798bc87f1a97235c95761f75fcc28
+  )
+  # Opzioni minime per evitare di costruire tool ed esempi
+  set(BUILD_CURL_EXE OFF CACHE BOOL "" FORCE)
+  set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+  set(ENABLE_MANUAL OFF CACHE BOOL "" FORCE)
+  set(HTTP_ONLY ON CACHE BOOL "" FORCE)
+  set(CURL_USE_OPENSSL OFF CACHE BOOL "" FORCE)
+  set(CURL_ZLIB OFF CACHE BOOL "" FORCE)
+  FetchContent_MakeAvailable(bundled_curl)
+  # Il progetto curl definisce target 'libcurl'. Creiamo alias standard se manca.
+  if(NOT TARGET CURL::libcurl AND TARGET libcurl)
+    add_library(CURL::libcurl ALIAS libcurl)
+  endif()
+  set(CURL_FOUND TRUE)
+endif()
+
+if(CURL_FOUND AND TARGET CURL::libcurl)
   target_link_libraries(ai-autoshell PRIVATE CURL::libcurl)
   target_link_libraries(ai-autoshell-script PRIVATE CURL::libcurl)
   if(TARGET test_planner)
@@ -295,9 +328,9 @@ if(CURL_FOUND)
   if(TARGET test_command_subst)
     target_link_libraries(test_command_subst PRIVATE CURL::libcurl)
   endif()
-  message(STATUS "libcurl found: enabling OpenAI client")
+  message(STATUS "libcurl abilitato (system=$<BOOL:${FORCE_BUNDLED_CURL}> bundled)")
 else()
-  message(WARNING "libcurl NOT found: OpenAI client will fallback to stub")
+  message(WARNING "libcurl non disponibile: il client OpenAI userà lo stub")
 endif()
 
 # ----------------------------------------------------------------------------
